@@ -67,8 +67,7 @@ bool parseArgs(int argc, char* argv[],
     return true;
 }
 
-// NOTE: We won't use these heavy maps in optimized run,
-// but to keep assignment interface compatible, we return true.
+
 bool readTPCHData(const std::string&,
                   std::vector<std::map<std::string, std::string>>&,
                   std::vector<std::map<std::string, std::string>>&,
@@ -105,26 +104,14 @@ bool executeQuery5(const std::string& r_name,
     results.clear();
     if (num_threads <= 0) num_threads = 1;
 
-    std::string base = start_date; // just to avoid unused warnings
+    std::string base = start_date; 
     (void)base;
 
     std::string tp = r_name;
     (void)tp;
 
-    // Paths
     std::string p = "";
-    // We cannot access table_path here due to signature,
-    // so we will read it using environment variable workaround:
-    // But simpler: query5.hpp/main.cpp usually passes correct data. 
-    // We'll use global static path from query5.hpp if provided.
-    // If not, we will fail gracefully.
-
-    // ---- IMPORTANT ----
-    // If your main.cpp passes actual table_path to this function separately,
-    // then you should modify function signature.
-    // In this repo, main.cpp usually calls readTPCHData + executeQuery5.
-    // We'll read table_path from a file ".table_path_tmp" written by main.
-    // If not exists, ask user to create it.
+  
 
     std::ifstream tpf(".table_path_tmp");
     std::string table_path;
@@ -145,7 +132,7 @@ bool executeQuery5(const std::string& r_name,
     std::string ordersFile  = table_path + "orders.tbl";
     std::string lineitemFile= table_path + "lineitem.tbl";
 
-    // region: r_regionkey | r_name
+    
     std::unordered_map<std::string,int> regionNameToKey;
     {
         std::ifstream fin(regionFile);
@@ -164,7 +151,7 @@ bool executeQuery5(const std::string& r_name,
     }
     int targetRegionKey = regionNameToKey[r_name];
 
-    // nation: n_nationkey | n_name | n_regionkey
+   
     std::unordered_map<int,std::string> nationKeyToName;
     std::unordered_map<int,int> nationKeyToRegion;
     {
@@ -182,7 +169,7 @@ bool executeQuery5(const std::string& r_name,
         }
     }
 
-    // customer: c_custkey | ... | c_nationkey
+   
     std::unordered_map<int,int> custNation;
     {
         std::ifstream fin(customerFile);
@@ -197,7 +184,7 @@ bool executeQuery5(const std::string& r_name,
         }
     }
 
-    // supplier: s_suppkey | ... | s_nationkey
+  
     std::unordered_map<int,int> suppNation;
     {
         std::ifstream fin(supplierFile);
@@ -212,8 +199,8 @@ bool executeQuery5(const std::string& r_name,
         }
     }
 
-    // orders: o_orderkey | o_custkey | ... | o_orderdate
-    std::unordered_map<int,int> validOrders; // orderkey -> custkey
+   
+    std::unordered_map<int,int> validOrders; 
     {
         std::ifstream fin(ordersFile);
         if(!fin.is_open()){ std::cerr<<"Cannot open "<<ordersFile<<"\n"; return false; }
@@ -237,7 +224,6 @@ bool executeQuery5(const std::string& r_name,
         }
     }
 
-    // ---- MULTITHREAD LINEITEM STREAMING ----
     long long sz = fileSize(lineitemFile);
     long long chunk = (sz + num_threads - 1) / num_threads;
 
@@ -251,7 +237,7 @@ bool executeQuery5(const std::string& r_name,
         if(!fin.is_open()) return;
 
         fin.seekg(start, std::ios::beg);
-        if(start != 0) seekToNextLine(fin); // align to next full line
+        if(start != 0) seekToNextLine(fin); 
 
         std::unordered_map<std::string,double> localAgg;
         std::string line;
@@ -282,7 +268,7 @@ bool executeQuery5(const std::string& r_name,
             auto itSN = suppNation.find(suppkey);
             if(itSN==suppNation.end()) continue;
 
-            if(itCN->second != itSN->second) continue; // c_nationkey = s_nationkey
+            if(itCN->second != itSN->second) continue; 
 
             int nk = itSN->second;
             const std::string &nname = nationKeyToName[nk];

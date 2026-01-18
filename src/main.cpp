@@ -27,8 +27,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::map<std::string, double> results;
+     // For optimized query5.cpp (table_path workaround)
+    {
+        std::ofstream tmp(".table_path_tmp");
+        tmp << table_path;
+        tmp.close();
+    }
 
+    std::map<std::string, double> results;
+     // START TIMER
+    auto start = std::chrono::high_resolution_clock::now();
+    
     if (!executeQuery5(r_name, start_date, end_date, num_threads, customer_data, orders_data, lineitem_data, supplier_data, nation_data, region_data, results)) {
         std::cerr << "Failed to execute TPCH Query 5." << std::endl;
         return 1;
@@ -39,6 +48,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::cout << "TPCH Query 5 implementation completed." << std::endl;
+    
+    // END TIMER 
+    auto end = std::chrono::high_resolution_clock::now();
+    double sec = std::chrono::duration<double>(end - start).count();
+    std::cout << "Query Execution Time: " << sec << " s" << std::endl;
+
     return 0;
 } 
